@@ -44,6 +44,11 @@ static NSCharacterSet* ValidCharacterSet;
     if (self != nil)
     {
         _caddy = [[Caddy alloc] init];
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(serverStatusDidChange:)
+                                                     name:CaddyDidServerStatusChangeNotification
+                                                   object:_caddy];
+        
         _servers = [NSMutableArray arrayWithArray:[_caddy readAllCaddyFiles]];
     }
     return self;
@@ -77,6 +82,18 @@ static NSCharacterSet* ValidCharacterSet;
     }];
 }
 
+- (void)serverStatusDidChange:(NSNotification*)notification
+{
+    NSString* serverId = notification.userInfo[CaddyDidServerStatusChangeServerIdKey];
+    NSIndexSet* rows = [_servers indexesOfObjectsPassingTest:^BOOL(Server * _Nonnull server, NSUInteger idx, BOOL * _Nonnull stop) {
+        return [server.serverId isEqualToString:serverId];
+    }];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [_serverListTableView reloadDataForRowIndexes:rows
+                                        columnIndexes:[NSIndexSet indexSetWithIndex:2]];
+    });
+}
+
 - (NSInteger)numberOfRowsInTableView:(NSTableView *)tableView
 {
     return self.serverCount;
@@ -87,14 +104,14 @@ static NSCharacterSet* ValidCharacterSet;
     if ([tableColumn.identifier isEqualToString:ServerListColumnLocation])
     {
         NSTableCellView* tableCellView = [tableView makeViewWithIdentifier:ServerListColumnLocation
-                                                             owner:self];
+                                                                     owner:self];
         tableCellView.textField.stringValue = _servers[row].location.path ?: @"";
         return tableCellView;
     }
     else if ([tableColumn.identifier isEqualToString:ServerListColumnPort])
     {
         NSTableCellView* tableCellView = [tableView makeViewWithIdentifier:ServerListColumnPort
-                                                             owner:self];
+                                                                     owner:self];
         in_port_t port = _servers[row].port;
         tableCellView.textField.stringValue = (port > 0) ? [NSString stringWithFormat:@"%d", port] : @"";
         return tableCellView;
@@ -102,8 +119,16 @@ static NSCharacterSet* ValidCharacterSet;
     else if ([tableColumn.identifier isEqualToString:ServerListColumnStatus])
     {
         NSTableCellView* tableCellView = [tableView makeViewWithIdentifier:ServerListColumnStatus
-                                                             owner:self];
-        tableCellView.imageView.image = [NSImage imageNamed:NSImageNameStatusAvailable];
+                                                                     owner:self];
+        if ([_caddy statusForServerWithId:_servers[row].serverId])
+        {
+            tableCellView.imageView.image = [NSImage imageNamed:NSImageNameStatusAvailable];
+        }
+        else
+        {
+            tableCellView.imageView.image = [NSImage imageNamed:NSImageNameStatusUnavailable];
+        }
+        
         return tableCellView;
     }
     else

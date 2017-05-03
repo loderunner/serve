@@ -26,3 +26,6 @@
 
 @end
 
+extern NSString* _Nonnull const CaddyDidServerStatusChangeNotification;
+extern NSString* _Nonnull const CaddyDidServerStatusChangeServerIdKey;
+extern NSString* _Nonnull const CaddyDidServerStatusChangeStatusKey;

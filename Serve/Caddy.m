@@ -11,6 +11,10 @@
 #import "Caddyfile.h"
 #import "Server.h"
 
+NSString* const CaddyDidServerStatusChangeNotification = @"CaddyDidServerStatusChangeNotification";
+NSString* const CaddyDidServerStatusChangeServerIdKey = @"CaddyDidServerStatusChangeServerIdKey";
+NSString* const CaddyDidServerStatusChangeStatusKey = @"CaddyDidServerStatusChangeStatusKey";
+
 NSString* const CaddyfileFileName = @"Caddyfile";
 NSString* const AccessLogFileName = @"access.log";
 NSString* const ErrorLogFileName = @"error.log";
@@ -205,10 +209,19 @@ extern inline NSString* quotePath(NSString* path)
         serverTask.terminationHandler = ^(NSTask * _Nonnull serverTask) {
             dispatch_async(_queue, ^() {
                 _tasks[serverId] = nil;
+                [[NSNotificationCenter defaultCenter] postNotificationName:CaddyDidServerStatusChangeNotification
+                                                                    object:self
+                                                                  userInfo:@{ CaddyDidServerStatusChangeServerIdKey : serverId,
+                                                                              CaddyDidServerStatusChangeStatusKey : @NO }];
             });
         };
         
         [serverTask launch];
+        
+        [[NSNotificationCenter defaultCenter] postNotificationName:CaddyDidServerStatusChangeNotification
+                                                            object:self
+                                                          userInfo:@{ CaddyDidServerStatusChangeServerIdKey : serverId,
+                                                                      CaddyDidServerStatusChangeStatusKey : @YES }];
     });
 }
 
@@ -225,8 +238,12 @@ extern inline NSString* quotePath(NSString* path)
 
 - (BOOL)statusForServerWithId:(NSString *)serverId
 {
-    NSTask* serverTask = _tasks[serverId];
-    return serverTask.running;
+    __block BOOL running;
+    dispatch_sync(_queue, ^{
+        NSTask* serverTask = _tasks[serverId];
+        running = serverTask.running;
+    });
+    return running;
 }
 
 @end
