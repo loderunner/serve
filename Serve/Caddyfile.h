@@ -6,9 +6,12 @@
 //  Copyright © 2017 Charles Francoise. All rights reserved.
 //
 
-#ifndef Caddyfile_h
-#define Caddyfile_h
+#include <Foundation/Foundation.h>
 
-#include <stdio.h>
 
-#endif /* Caddyfile_h */
+
+NSArray<NSDictionary*>* parseLabelList(NSString* line);
+NSDictionary* parseLabel(NSString* label);
+NSDictionary* parseEntry(NSString* line);
+NSDictionary* parseRootArguments(NSString* arguments);
+

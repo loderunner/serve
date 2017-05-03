@@ -8,8 +8,14 @@
 
 #import <Cocoa/Cocoa.h>
 
+#import "ServerListController.h"
+
 @interface ViewController : NSViewController
 
+@property (nonatomic, assign) IBOutlet ServerListController* serverListController;
+
+- (IBAction)addButtonClicked:(id)sender;
+- (IBAction)startButtonClicked:(id)sender;
 
 @end
 

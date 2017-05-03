@@ -12,13 +12,17 @@
 
 @interface Caddy : NSObject
 
-+ (NSURL*)caddyfileURLForServerId:(NSString*)serverId;
-+ (NSURL*)accessLogURLForServerId:(NSString*)serverId;
-+ (NSURL*)errorLogURLForServerId:(NSString*)serverId;
+- (nonnull NSURL*)caddyfileURLForServerId:(nonnull NSString*)serverId;
+- (nonnull NSURL*)accessLogURLForServerId:(nonnull NSString*)serverId;
+- (nonnull NSURL*)errorLogURLForServerId:(nonnull NSString*)serverId;
 
-+ (BOOL)writeCaddyfileForServer:(Server*)server;
-+ (Server*)readCaddyfileForServerId:(NSString*)serverId;
-+ (NSArray<Server*>*)readAllCaddyFiles;
+- (BOOL)writeCaddyfileForServer:(nonnull Server*)server;
+- (nullable Server*)readCaddyfileForServerId:(nonnull NSString*)serverId;
+- (nonnull NSArray<Server*>*)readAllCaddyFiles;
+
+- (void)startServer:(nonnull Server*)server;
+- (void)stopServerWithId:(nonnull NSString*)serverId;
+- (BOOL)statusForServerWithId:(nonnull NSString*)serverId;
 
 @end
 

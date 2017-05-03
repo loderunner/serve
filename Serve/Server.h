@@ -7,7 +7,23 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <sys/socket.h>
 
 @interface Server : NSObject
+
+@property (nonatomic, strong) NSURL* location;
+@property (nonatomic, assign) in_port_t port;
+@property (nonatomic, strong) NSString* serverId;
+
++ (instancetype)serverWithId:(NSString*)serverId
+                    location:(NSURL*)location
+                      andPort:(in_port_t)port;
++ (instancetype)serverWithDictionary:(NSDictionary*)dictionary;
+
+- (instancetype)initWithId:(NSString*)serverId
+                  location:(NSURL*)location
+                   andPort:(in_port_t)port;
+- (instancetype)initWithDictionary:(NSDictionary*)dictionary;
+- (NSDictionary*)dictionaryRepresentation;
 
 @end

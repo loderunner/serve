@@ -23,5 +23,14 @@
     // Update the view, if already loaded.
 }
 
+- (void)addButtonClicked:(id)sender
+{
+    [_serverListController addServerWithLocation:nil andPort:0];
+}
+
+- (void)startButtonClicked:(id)sender
+{
+    [_serverListController startServers];
+}
 
 @end

@@ -6,8 +6,14 @@
 //  Copyright © 2017 Charles Francoise. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
+#import <Cocoa/Cocoa.h>
 
-@interface ServerListController : NSObject
+@interface ServerListController : NSObject <NSTableViewDataSource, NSTableViewDelegate>
+
+@property (nonatomic, assign) IBOutlet NSTableView* serverListTableView;
+@property (nonatomic, readonly) NSUInteger serverCount;
+
+- (void)addServerWithLocation:(NSURL*)location andPort:(in_port_t)port;
+- (void)startServers;
 
 @end
