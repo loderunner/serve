@@ -15,7 +15,13 @@
 @implementation AppDelegate
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
-    // Insert code here to initialize your application
+    [DDLog addLogger:[DDTTYLogger sharedInstance]];
+#ifndef DEBUG
+    [DDLog addLogger:[DDASLLogger sharedInstance]];
+    
+    DDLogFileManagerDefault* logFileManager = [[DDLogFileManagerDefault alloc] init];
+    [DDLog addLogger:[[DDFileLogger alloc] initWithLogFileManager:logFileManager]];
+#endif
 }
 
 

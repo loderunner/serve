@@ -134,7 +134,7 @@ extern inline NSString* quotePath(NSString* path)
     }
     else
     {
-        DDLogError(@"Couldn't write Caddyfule: %@", caddyfilePath);
+        DDLogError(@"Couldn't write Caddyfile: %@", caddyfilePath);
     }
     
     return res;
