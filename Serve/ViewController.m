@@ -28,9 +28,19 @@
     [_serverListController addServerWithLocation:nil andPort:0];
 }
 
+- (void)removeButtonClicked:(id)sender
+{
+    [_serverListController removeServers];
+}
+
 - (void)startButtonClicked:(id)sender
 {
     [_serverListController startServers];
+}
+
+- (void)stopButtonClicked:(id)sender
+{
+    [_serverListController stopServers];
 }
 
 @end

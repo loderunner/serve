@@ -14,6 +14,8 @@
 @property (nonatomic, readonly) NSUInteger serverCount;
 
 - (void)addServerWithLocation:(NSURL*)location andPort:(in_port_t)port;
+- (void)removeServers;
 - (void)startServers;
+- (void)stopServers;
 
 @end

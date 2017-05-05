@@ -89,10 +89,24 @@ static NSCharacterSet* ValidCharacterSet;
                               select:YES];
 }
 
+- (void)removeServers
+{
+    [self stopServers];
+    [_servers removeObjectsAtIndexes:_serverListTableView.selectedRowIndexes];
+    [_serverListTableView reloadData];
+}
+
 - (void)startServers
 {
     [_serverListTableView.selectedRowIndexes enumerateIndexesUsingBlock:^(NSUInteger idx, BOOL * _Nonnull stop) {
         [_caddy startServer:_servers[idx]];
+    }];
+}
+
+- (void)stopServers
+{
+    [_serverListTableView.selectedRowIndexes enumerateIndexesUsingBlock:^(NSUInteger idx, BOOL * _Nonnull stop) {
+        [_caddy stopServerWithId:_servers[idx].serverId];
     }];
 }
 

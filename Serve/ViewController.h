@@ -15,7 +15,9 @@
 @property (nonatomic, assign) IBOutlet ServerListController* serverListController;
 
 - (IBAction)addButtonClicked:(id)sender;
+- (IBAction)removeButtonClicked:(id)sender;
 - (IBAction)startButtonClicked:(id)sender;
+- (IBAction)stopButtonClicked:(id)sender;
 
 @end
 

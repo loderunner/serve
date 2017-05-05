@@ -91,10 +91,12 @@ extern inline NSString* quotePath(NSString* path)
 {
     NSFileManager* fileManager = [NSFileManager defaultManager];
     
-    [fileManager createDirectoryAtPath:[[self caddyfileURLForServerId:server.serverId] URLByDeletingLastPathComponent].path
+    NSString* directoryPath = [[self caddyfileURLForServerId:server.serverId] URLByDeletingLastPathComponent].path;
+    [fileManager createDirectoryAtPath:directoryPath
            withIntermediateDirectories:YES
                             attributes:nil
                                  error:NULL];
+    DDLogDebug(@"Created directory: %@", directoryPath);
     
     NSMutableString* caddyfileContents = [NSMutableString string];
     
@@ -122,9 +124,20 @@ extern inline NSString* quotePath(NSString* path)
         [caddyfileContents appendString:errorLogString];
     }
     
-    return [fileManager createFileAtPath:[self caddyfileURLForServerId:server.serverId].path
-                                contents:[caddyfileContents dataUsingEncoding:NSUTF8StringEncoding]
-                              attributes:nil];
+    NSString* caddyfilePath = [self caddyfileURLForServerId:server.serverId].path;
+    BOOL res =  [fileManager createFileAtPath:caddyfilePath
+                                     contents:[caddyfileContents dataUsingEncoding:NSUTF8StringEncoding]
+                                   attributes:nil];
+    if (res)
+    {
+        DDLogDebug(@"Wrote Caddyfile: %@", caddyfilePath);
+    }
+    else
+    {
+        DDLogError(@"Couldn't write Caddyfule: %@", caddyfilePath);
+    }
+    
+    return res;
 }
 
 - (Server *)readCaddyfileForServerId:(NSString *)serverId
