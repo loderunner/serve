@@ -22,6 +22,7 @@ static NSCharacterSet* ValidCharacterSet;
 
 @property (nonatomic, strong) NSMutableArray<Server*>* servers;
 @property (nonatomic, strong) Caddy* caddy;
+@property (nonatomic, assign) id notificationToken;
 
 @end
 
@@ -51,8 +52,20 @@ static NSCharacterSet* ValidCharacterSet;
         
         [_caddy killAllServers];
         _servers = [NSMutableArray arrayWithArray:[_caddy readAllCaddyFiles]];
+        
+        _notificationToken = [[NSNotificationCenter defaultCenter] addObserverForName:NSApplicationWillTerminateNotification
+                                                                               object:nil
+                                                                                queue:nil
+                                                                           usingBlock:^(NSNotification * _Nonnull note) {
+                                                                               [_caddy killAllServers];
+                                                                           }];
     }
     return self;
+}
+
+- (void)dealloc
+{
+    [[NSNotificationCenter defaultCenter] removeObserver:_notificationToken];
 }
 
 - (NSUInteger)serverCount
