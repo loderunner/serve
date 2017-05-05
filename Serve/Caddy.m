@@ -11,6 +11,8 @@
 #import "Caddyfile.h"
 #import "Server.h"
 
+#include <sys/sysctl.h>
+
 NSString* const CaddyDidServerStatusChangeNotification = @"CaddyDidServerStatusChangeNotification";
 NSString* const CaddyDidServerStatusChangeServerIdKey = @"CaddyDidServerStatusChangeServerIdKey";
 NSString* const CaddyDidServerStatusChangeStatusKey = @"CaddyDidServerStatusChangeStatusKey";
@@ -243,6 +245,93 @@ extern inline NSString* quotePath(NSString* path)
             [serverTask terminate];
         }
     });
+}
+
+- (void)killAllServers
+{
+    NSFileManager* fileManager = [NSFileManager defaultManager];
+    
+    NSArray<NSURL*>* directoryContents = [fileManager contentsOfDirectoryAtURL:[self applicationSupportDirectory]
+                                                    includingPropertiesForKeys:@[ NSURLIsDirectoryKey ]
+                                                                       options:NSDirectoryEnumerationSkipsSubdirectoryDescendants
+                                                                         error:NULL];
+    
+    for (NSURL* serverURL in directoryContents)
+    {
+        NSNumber* isDirectory;
+        BOOL success = [serverURL getResourceValue:&isDirectory
+                                            forKey:NSURLIsDirectoryKey
+                                             error:NULL];
+        if (success && [isDirectory boolValue])
+        {
+            NSURL* pidfileURL = [serverURL URLByAppendingPathComponent:PidfileFileName];
+            NSString* pidString = [NSString stringWithContentsOfURL:pidfileURL
+                                                           encoding:NSUTF8StringEncoding
+                                                              error:NULL];
+            if (pidString != nil)
+            {
+                pid_t pid = (pid_t)pidString.integerValue;
+                
+                int mib[4];
+                mib[0] = CTL_KERN;
+                mib[1] = KERN_PROC;
+                mib[2] = KERN_PROC_PID;
+                mib[3] = pid;
+                
+                size_t bufSize;
+                int res = sysctl(mib, 4, NULL, &bufSize, NULL, 0);
+                if (res < 0)
+                {
+                    DDLogError(@"Failure calling sysctl");
+                    continue;
+                }
+                else if (bufSize == 0)
+                {
+                    DDLogInfo(@"No such process.");
+                    //[fileManager removeItemAtURL:pidfileURL error:NULL];
+                    continue;
+                }
+                
+                size_t numEntries = (bufSize / sizeof(struct kinfo_proc));
+                struct kinfo_proc* procInfo = (struct kinfo_proc *)malloc(bufSize);
+                
+                res = sysctl(mib, 4, procInfo, &bufSize, NULL, 0);
+                if (res < 0)
+                {
+                    DDLogError(@"Failure calling sysctl");
+                    continue;
+                }
+                
+                struct kinfo_proc* kp = procInfo;
+                size_t i;
+                for (i = 0; i < numEntries; i++)
+                {
+                    if (kp->kp_proc.p_pid == pid)
+                    {
+                        break;
+                    }
+                    kp++;
+                }
+                
+                if (i == numEntries)
+                {
+                    DDLogInfo(@"No such process.");
+                    //[fileManager removeItemAtURL:pidfileURL error:NULL];
+                    continue;
+                }
+                
+                NSString* command = [NSString stringWithUTF8String:kp->kp_proc.p_comm];
+                DDLogDebug(@"Process command: %@", command);
+                
+                if ([command isEqualToString:@"caddy"])
+                {
+                    kill(pid, SIGTERM);
+                }
+                
+                free(procInfo);
+            }
+        }
+    }
 }
 
 - (BOOL)statusForServerWithId:(NSString *)serverId

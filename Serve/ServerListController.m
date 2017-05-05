@@ -49,6 +49,7 @@ static NSCharacterSet* ValidCharacterSet;
                                                      name:CaddyDidServerStatusChangeNotification
                                                    object:_caddy];
         
+        [_caddy killAllServers];
         _servers = [NSMutableArray arrayWithArray:[_caddy readAllCaddyFiles]];
     }
     return self;

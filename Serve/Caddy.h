@@ -23,6 +23,7 @@
 - (void)startServer:(nonnull Server*)server;
 - (void)stopServerWithId:(nonnull NSString*)serverId;
 - (BOOL)statusForServerWithId:(nonnull NSString*)serverId;
+- (void)killAllServers;
 
 @end
 
