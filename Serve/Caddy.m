@@ -18,6 +18,7 @@ NSString* const CaddyDidServerStatusChangeStatusKey = @"CaddyDidServerStatusChan
 NSString* const CaddyfileFileName = @"Caddyfile";
 NSString* const AccessLogFileName = @"access.log";
 NSString* const ErrorLogFileName = @"error.log";
+NSString* const PidfileFileName = @"Caddy.pid";
 
 extern inline NSString* quotePath(NSString* path)
 {
@@ -75,6 +76,13 @@ extern inline NSString* quotePath(NSString* path)
     return [NSURL fileURLWithPathComponents:@[ [self applicationSupportDirectory].path,
                                                serverId,
                                                ErrorLogFileName]];
+}
+
+- (NSURL*)pidfileURLForServerId:(NSString*)serverId
+{
+    return [NSURL fileURLWithPathComponents:@[ [self applicationSupportDirectory].path,
+                                               serverId,
+                                               PidfileFileName]];
 }
 
 - (BOOL)writeCaddyfileForServer:(Server *)server
@@ -201,7 +209,8 @@ extern inline NSString* quotePath(NSString* path)
         
         NSTask* serverTask = [[NSTask alloc] init];
         serverTask.launchPath = [[NSBundle mainBundle] pathForAuxiliaryExecutable:@"caddy"];
-        serverTask.arguments = @[ @"-conf", [self caddyfileURLForServerId:serverId].path ];
+        serverTask.arguments = @[ @"-conf", [self caddyfileURLForServerId:serverId].path,
+                                  @"-pidfile", [self pidfileURLForServerId:serverId].path ];
         serverTask.currentDirectoryPath = [self applicationSupportDirectory].path;
         
         _tasks[serverId] = serverTask;
