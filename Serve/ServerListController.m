@@ -18,11 +18,15 @@ NSString* const ServerListKey = @"ServerList";
 
 static NSCharacterSet* ValidCharacterSet;
 
+static NSArray<NSURL*>* getFolderURLs(id<NSDraggingInfo> info, NSTableViewDropOperation op);
+
 @interface ServerListController ()
 
 @property (nonatomic, strong) NSMutableArray<Server*>* servers;
 @property (nonatomic, strong) Caddy* caddy;
 @property (nonatomic, assign) id notificationToken;
+
+- (void)addServerWithLocation:(NSURL*)location andPort:(in_port_t)port atRow:(NSUInteger)row;
 
 @end
 
@@ -63,6 +67,11 @@ static NSCharacterSet* ValidCharacterSet;
     return self;
 }
 
+- (void)awakeFromNib
+{
+    [_serverListTableView registerForDraggedTypes:@[ (__bridge NSString*)kUTTypeFileURL ]];
+}
+
 - (void)dealloc
 {
     [[NSNotificationCenter defaultCenter] removeObserver:_notificationToken];
@@ -75,6 +84,13 @@ static NSCharacterSet* ValidCharacterSet;
 
 - (void)addServerWithLocation:(NSURL *)location andPort:(in_port_t)port
 {
+    [self addServerWithLocation:location
+                        andPort:port
+                          atRow:(_servers.count - 1)];
+}
+
+- (void)addServerWithLocation:(NSURL *)location andPort:(in_port_t)port atRow:(NSUInteger)row
+{
     NSString* serverId = [self serverIdForLocation:location];
     
     Server* server = [Server serverWithId:serverId
@@ -84,7 +100,7 @@ static NSCharacterSet* ValidCharacterSet;
     
     [_serverListTableView reloadData];
     [_serverListTableView editColumn:0
-                                 row:(_servers.count - 1)
+                                 row:row
                            withEvent:nil
                               select:YES];
 }
@@ -127,7 +143,9 @@ static NSCharacterSet* ValidCharacterSet;
     return self.serverCount;
 }
 
-- (NSView *)tableView:(NSTableView *)tableView viewForTableColumn:(NSTableColumn *)tableColumn row:(NSInteger)row
+- (NSView *)tableView:(NSTableView *)tableView
+   viewForTableColumn:(NSTableColumn *)tableColumn
+                  row:(NSInteger)row
 {
     if ([tableColumn.identifier isEqualToString:ServerListColumnLocation])
     {
@@ -162,6 +180,43 @@ static NSCharacterSet* ValidCharacterSet;
     else
     {
         return nil;
+    }
+}
+
+- (BOOL)tableView:(NSTableView *)tableView writeRowsWithIndexes:(NSIndexSet *)rowIndexes toPasteboard:(NSPasteboard *)pboard
+{
+    return YES;
+}
+
+- (NSDragOperation)tableView:(NSTableView*)tableView
+                validateDrop:(id<NSDraggingInfo>)info
+                 proposedRow:(NSInteger)row
+       proposedDropOperation:(NSTableViewDropOperation)op
+{
+    NSArray<NSURL*>* folderURLs = getFolderURLs(info, op);
+    
+    return (folderURLs.count != 0) ? NSDragOperationCopy : NSDragOperationNone;
+}
+
+- (BOOL)tableView:(NSTableView*)tableView
+       acceptDrop:(id<NSDraggingInfo>)info
+              row:(NSInteger)row
+    dropOperation:(NSTableViewDropOperation)op
+{
+    NSArray<NSURL*>* folderURLs = getFolderURLs(info, op);
+    
+    if (folderURLs.count > 0)
+    {
+        NSURL* url = [folderURLs firstObject];
+        
+        [self addServerWithLocation:url
+                            andPort:8000
+                              atRow:row];
+        return YES;
+    }
+    else
+    {
+        return NO;
     }
 }
 
@@ -230,3 +285,19 @@ static NSCharacterSet* ValidCharacterSet;
 }
 
 @end
+
+NSArray<NSURL*>* getFolderURLs(id<NSDraggingInfo> info, NSTableViewDropOperation op)
+{
+    if (op != NSTableViewDropAbove)
+    {
+        return nil;
+    }
+    
+    NSPasteboard* pb = info.draggingPasteboard;
+    
+    NSArray* urls = [pb readObjectsForClasses:@[ NSURL.class ]
+                                      options:@{ NSPasteboardURLReadingFileURLsOnlyKey : @YES,
+                                                 NSPasteboardURLReadingContentsConformToTypesKey : @[ (__bridge NSString*)kUTTypeDirectory ] }];
+    
+    return urls;
+}
