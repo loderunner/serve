@@ -221,6 +221,10 @@ extern inline NSString* quotePath(NSString* path)
 {
     dispatch_async(_queue, ^() {
         NSString* serverId = server.serverId;
+        if (_tasks[server.serverId] != nil)
+        {
+            return;
+        }
         
         NSTask* serverTask = [[NSTask alloc] init];
         serverTask.launchPath = [[NSBundle mainBundle] pathForAuxiliaryExecutable:@"caddy"];
@@ -231,6 +235,7 @@ extern inline NSString* quotePath(NSString* path)
         _tasks[serverId] = serverTask;
         
         serverTask.terminationHandler = ^(NSTask * _Nonnull serverTask) {
+            DDLogInfo(@"Server terminated: %@", server.serverId);
             dispatch_async(_queue, ^() {
                 _tasks[serverId] = nil;
                 [[NSNotificationCenter defaultCenter] postNotificationName:CaddyDidServerStatusChangeNotification
@@ -241,6 +246,7 @@ extern inline NSString* quotePath(NSString* path)
         };
         
         [serverTask launch];
+        DDLogInfo(@"Launched server %@ (port: %d)", server.serverId, server.port);
         
         [[NSNotificationCenter defaultCenter] postNotificationName:CaddyDidServerStatusChangeNotification
                                                             object:self
@@ -347,14 +353,14 @@ extern inline NSString* quotePath(NSString* path)
     }
 }
 
-- (BOOL)statusForServerWithId:(NSString *)serverId
+- (CaddyStatus)statusForServerWithId:(NSString *)serverId
 {
-    __block BOOL running;
+    __block CaddyStatus status;
     dispatch_sync(_queue, ^{
         NSTask* serverTask = _tasks[serverId];
-        running = serverTask.running;
+        status = serverTask.running ? CaddyStatusRunning : CaddyStatusStopped;
     });
-    return running;
+    return status;
 }
 
 @end

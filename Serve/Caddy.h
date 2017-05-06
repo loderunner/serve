@@ -10,6 +10,11 @@
 
 @class Server;
 
+typedef enum : NSUInteger {
+    CaddyStatusStopped,
+    CaddyStatusRunning,
+} CaddyStatus;
+
 @interface Caddy : NSObject
 
 - (nonnull NSURL*)caddyfileURLForServerId:(nonnull NSString*)serverId;
@@ -22,7 +27,7 @@
 
 - (void)startServer:(nonnull Server*)server;
 - (void)stopServerWithId:(nonnull NSString*)serverId;
-- (BOOL)statusForServerWithId:(nonnull NSString*)serverId;
+- (CaddyStatus)statusForServerWithId:(nonnull NSString*)serverId;
 - (void)killAllServers;
 
 @end
