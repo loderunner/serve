@@ -12,7 +12,22 @@ NSString* const ServerIdKey = @"id";
 NSString* const ServerLocationKey = @"location";
 NSString* const ServerPortKey = @"port";
 
+NSString* const ServerUTI = @"io.github.loderunner.serve.server";
+
+static NSArray<NSString*>* PasteboardTypes;
+
 @implementation Server
+
++ (void)initialize
+{
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        if (PasteboardTypes == nil)
+        {
+            PasteboardTypes = @[ ServerUTI ];
+        }
+    });
+}
 
 + (instancetype)serverWithId:(NSString*)serverId
                     location:(NSURL *)location
@@ -91,6 +106,59 @@ NSString* const ServerPortKey = @"port";
     return @{ ServerIdKey: _serverId,
               ServerLocationKey : _location.path,
               ServerPortKey : @(_port) };
+}
+
+- (NSArray<NSString *> *)writableTypesForPasteboard:(NSPasteboard *)pasteboard
+{
+    return PasteboardTypes;
+}
+- (nullable id)pasteboardPropertyListForType:(NSString *)type
+{
+    return self.dictionaryRepresentation;
+}
+
++ (NSArray<NSString *> *)readableTypesForPasteboard:(NSPasteboard *)pasteboard
+{
+    return PasteboardTypes;
+}
+
++ (NSPasteboardReadingOptions)readingOptionsForType:(NSString *)type pasteboard:(NSPasteboard *)pasteboard
+{
+    return NSPasteboardReadingAsPropertyList;
+}
+
+
+- (id)initWithPasteboardPropertyList:(id)propertyList ofType:(NSString *)type
+{
+    if ([type isEqualToString:ServerUTI] && [propertyList isKindOfClass:NSDictionary.class])
+    {
+        return [self initWithDictionary:propertyList];
+    }
+    
+    return nil;
+}
+
+- (NSString *)description
+{
+    return [NSString stringWithFormat:@"Server<%p> { id : %@, location : %@ } (:%d)", self, _serverId, _location.path, _port];
+}
+
+- (BOOL)isEqual:(id)object
+{
+    if (![object isMemberOfClass:self.class])
+    {
+        return NO;
+    }
+    
+    Server* other = object;
+    return ([_serverId isEqualToString:other.serverId]
+            && [_location isEqual:other.location]
+            && (_port == other.port));
+}
+
+- (NSUInteger)hash
+{
+    return (_serverId.hash ^ _location.hash ^ _port);
 }
 
 @end

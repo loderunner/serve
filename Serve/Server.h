@@ -9,7 +9,7 @@
 #import <Foundation/Foundation.h>
 #import <sys/socket.h>
 
-@interface Server : NSObject
+@interface Server : NSObject <NSPasteboardWriting, NSPasteboardReading>
 
 @property (nonatomic, strong) NSURL* location;
 @property (nonatomic, assign) in_port_t port;
@@ -27,3 +27,5 @@
 - (NSDictionary*)dictionaryRepresentation;
 
 @end
+
+extern NSString* const ServerUTI;

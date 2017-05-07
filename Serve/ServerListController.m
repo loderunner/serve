@@ -69,7 +69,7 @@ static NSArray<NSURL*>* getFolderURLs(id<NSDraggingInfo> info, NSTableViewDropOp
 
 - (void)awakeFromNib
 {
-    [_serverListTableView registerForDraggedTypes:@[ (__bridge NSString*)kUTTypeFileURL ]];
+    [_serverListTableView registerForDraggedTypes:@[ (__bridge NSString*)kUTTypeFileURL, ServerUTI ]];
 }
 
 - (void)dealloc
@@ -185,6 +185,9 @@ static NSArray<NSURL*>* getFolderURLs(id<NSDraggingInfo> info, NSTableViewDropOp
 
 - (BOOL)tableView:(NSTableView *)tableView writeRowsWithIndexes:(NSIndexSet *)rowIndexes toPasteboard:(NSPasteboard *)pboard
 {
+    NSArray<Server*>* pboardServers = [_servers objectsAtIndexes:rowIndexes];
+    [pboard writeObjects:pboardServers];
+    DDLogVerbose(@"Wrote objects to pasteboard : %@", pboardServers);
     return YES;
 }
 
@@ -193,9 +196,31 @@ static NSArray<NSURL*>* getFolderURLs(id<NSDraggingInfo> info, NSTableViewDropOp
                  proposedRow:(NSInteger)row
        proposedDropOperation:(NSTableViewDropOperation)op
 {
-    NSArray<NSURL*>* folderURLs = getFolderURLs(info, op);
+    if (op != NSTableViewDropAbove)
+    {
+        return NSDragOperationNone;
+    }
     
-    return (folderURLs.count != 0) ? NSDragOperationCopy : NSDragOperationNone;
+    NSPasteboard* pbboard = info.draggingPasteboard;
+    
+    NSArray<NSURL*>* urls = [pbboard readObjectsForClasses:@[ NSURL.class ]
+                                                   options:@{ NSPasteboardURLReadingFileURLsOnlyKey : @YES,
+                                                              NSPasteboardURLReadingContentsConformToTypesKey : @[ (__bridge NSString*)kUTTypeDirectory ] }];
+    
+    if (urls.count > 0)
+    {
+        return NSDragOperationCopy;
+    }
+    
+    NSArray<Server*>* servers =  [pbboard readObjectsForClasses:@[ Server.class ]
+                                                        options:nil];
+    
+    if (servers.count > 0)
+    {
+        return NSDragOperationCopy;
+    }
+    
+    return NSDragOperationNone;
 }
 
 - (BOOL)tableView:(NSTableView*)tableView
@@ -203,21 +228,56 @@ static NSArray<NSURL*>* getFolderURLs(id<NSDraggingInfo> info, NSTableViewDropOp
               row:(NSInteger)row
     dropOperation:(NSTableViewDropOperation)op
 {
-    NSArray<NSURL*>* folderURLs = getFolderURLs(info, op);
-    
-    if (folderURLs.count > 0)
+    if (op != NSTableViewDropAbove)
     {
-        NSURL* url = [folderURLs firstObject];
+        return NO;
+    }
+    
+    NSPasteboard* pbboard = info.draggingPasteboard;
+    
+    NSArray<NSURL*>* urls = [pbboard readObjectsForClasses:@[ NSURL.class ]
+                                                   options:@{ NSPasteboardURLReadingFileURLsOnlyKey : @YES,
+                                                              NSPasteboardURLReadingContentsConformToTypesKey : @[ (__bridge NSString*)kUTTypeDirectory ] }];
+    
+    if (urls.count > 0)
+    {
+        NSURL* url = [urls firstObject];
         
         [self addServerWithLocation:url
                             andPort:8000
                               atRow:row];
         return YES;
     }
-    else
+    
+    NSArray<Server*>* pboardServers =  [pbboard readObjectsForClasses:@[ Server.class ]
+                                                              options:nil];
+    
+    if (pboardServers.count > 0)
     {
-        return NO;
+        __block NSInteger insertRow = row;
+        NSMutableArray* serversToMove = [NSMutableArray array];
+        [pboardServers enumerateObjectsUsingBlock:^(Server * _Nonnull server, NSUInteger idx, BOOL * _Nonnull stop) {
+            if ([_servers containsObject:server])
+            {
+                [serversToMove addObject:server];
+            }
+            
+            if (idx < insertRow)
+            {
+                insertRow--;
+            }
+        }];
+        
+        [_servers removeObjectsInArray:serversToMove];
+        NSIndexSet* insertIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(insertRow, serversToMove.count)];
+        [_servers insertObjects:serversToMove atIndexes:insertIndexes];
+        
+        [_serverListTableView reloadData];
+        
+        return YES;
     }
+    
+    return NO;
 }
 
 - (void)controlTextDidEndEditing:(NSNotification *)obj
@@ -285,19 +345,3 @@ static NSArray<NSURL*>* getFolderURLs(id<NSDraggingInfo> info, NSTableViewDropOp
 }
 
 @end
-
-NSArray<NSURL*>* getFolderURLs(id<NSDraggingInfo> info, NSTableViewDropOperation op)
-{
-    if (op != NSTableViewDropAbove)
-    {
-        return nil;
-    }
-    
-    NSPasteboard* pb = info.draggingPasteboard;
-    
-    NSArray* urls = [pb readObjectsForClasses:@[ NSURL.class ]
-                                      options:@{ NSPasteboardURLReadingFileURLsOnlyKey : @YES,
-                                                 NSPasteboardURLReadingContentsConformToTypesKey : @[ (__bridge NSString*)kUTTypeDirectory ] }];
-    
-    return urls;
-}
