@@ -18,8 +18,6 @@ NSString* const ServerListKey = @"ServerList";
 
 static NSCharacterSet* ValidCharacterSet;
 
-static NSArray<NSURL*>* getFolderURLs(id<NSDraggingInfo> info, NSTableViewDropOperation op);
-
 @interface ServerListController ()
 
 @property (nonatomic, strong) NSMutableArray<Server*>* servers;
@@ -115,14 +113,16 @@ static NSArray<NSURL*>* getFolderURLs(id<NSDraggingInfo> info, NSTableViewDropOp
 
 - (void)startServers
 {
-    [_serverListTableView.selectedRowIndexes enumerateIndexesUsingBlock:^(NSUInteger idx, BOOL * _Nonnull stop) {
+    [_serverListTableView.selectedRowIndexes enumerateIndexesUsingBlock:^(NSUInteger idx,
+                                                                          BOOL * _Nonnull stop) {
         [_caddy startServer:_servers[idx]];
     }];
 }
 
 - (void)stopServers
 {
-    [_serverListTableView.selectedRowIndexes enumerateIndexesUsingBlock:^(NSUInteger idx, BOOL * _Nonnull stop) {
+    [_serverListTableView.selectedRowIndexes enumerateIndexesUsingBlock:^(NSUInteger idx,
+                                                                          BOOL * _Nonnull stop) {
         [_caddy stopServerWithId:_servers[idx].serverId];
     }];
 }
@@ -258,7 +258,9 @@ static NSArray<NSURL*>* getFolderURLs(id<NSDraggingInfo> info, NSTableViewDropOp
     {
         __block NSInteger insertRow = row;
         NSMutableArray* serversToMove = [NSMutableArray array];
-        [pboardServers enumerateObjectsUsingBlock:^(Server * _Nonnull server, NSUInteger idx, BOOL * _Nonnull stop) {
+        [pboardServers enumerateObjectsUsingBlock:^(Server * _Nonnull server,
+                                                    NSUInteger idx,
+                                                    BOOL * _Nonnull stop) {
             if ([_servers containsObject:server])
             {
                 [serversToMove addObject:server];
@@ -280,6 +282,69 @@ static NSArray<NSURL*>* getFolderURLs(id<NSDraggingInfo> info, NSTableViewDropOp
     }
     
     return NO;
+}
+
+- (void)tableView:(NSTableView *)tableView sortDescriptorsDidChange:(NSArray<NSSortDescriptor*>*)oldDescriptors
+{
+    [tableView.sortDescriptors enumerateObjectsWithOptions:NSEnumerationReverse
+                                                usingBlock:^(NSSortDescriptor * _Nonnull sortDescriptor,
+                                                            NSUInteger idx, BOOL *
+                                                            _Nonnull stop) {
+        if ([sortDescriptor.key isEqualToString:@"location"])
+        {
+            [_servers sortUsingComparator:^NSComparisonResult(Server*  _Nonnull server1, Server*  _Nonnull server2) {
+                if (sortDescriptor.ascending)
+                {
+                    return [server2.location.path localizedStandardCompare:server1.location.path];
+                }
+                else
+                {
+                    return [server1.location.path localizedStandardCompare:server2.location.path];
+                }
+            }];
+        }
+        else if ([sortDescriptor.key isEqualToString:@"port"])
+        {
+            [_servers sortUsingComparator:^NSComparisonResult(Server*  _Nonnull server1, Server*  _Nonnull server2) {
+                if (sortDescriptor.ascending)
+                {
+                    return [@(server2.port) compare:@(server1.port)];
+                }
+                else
+                {
+                    return [@(server1.port) compare:@(server2.port)];
+                }
+            }];
+        }
+        else if ([sortDescriptor.key isEqualToString:@"status"])
+        {
+            [_servers sortUsingComparator:^NSComparisonResult(Server*  _Nonnull server1, Server*  _Nonnull server2) {
+                CaddyStatus status1 = [_caddy statusForServerWithId:server1.serverId];
+                CaddyStatus status2 = [_caddy statusForServerWithId:server2.serverId];
+                
+                if (!sortDescriptor.ascending)
+                {
+                    CaddyStatus tmp = status1;
+                    status1 = status2;
+                    status2 = tmp;
+                }
+                
+                if (status2 < status1)
+                {
+                    return NSOrderedAscending;
+                }
+                else if (status1 == status2)
+                {
+                    return NSOrderedSame;
+                }
+                else
+                {
+                    return NSOrderedDescending;
+                }
+            }];
+        }
+    }];
+    [_serverListTableView reloadData];
 }
 
 - (void)controlTextDidEndEditing:(NSNotification *)obj

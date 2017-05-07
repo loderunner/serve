@@ -711,6 +711,7 @@
                                                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                     </textFieldCell>
+                                                    <sortDescriptor key="sortDescriptorPrototype" selector="compare:" sortKey="location"/>
                                                     <tableColumnResizingMask key="resizingMask" resizeWithTable="YES"/>
                                                     <prototypeCellViews>
                                                         <tableCellView id="JSh-wQ-bhl">
@@ -747,6 +748,7 @@
                                                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                     </textFieldCell>
+                                                    <sortDescriptor key="sortDescriptorPrototype" selector="compare:" sortKey="port"/>
                                                     <prototypeCellViews>
                                                         <tableCellView id="A2W-3A-Qsf">
                                                             <rect key="frame" x="270" y="1" width="60" height="17"/>
@@ -778,6 +780,7 @@
                                                         <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                                                     </tableHeaderCell>
                                                     <imageCell key="dataCell" alignment="left" imageScaling="proportionallyDown" image="NSStatusAvailable" id="Ggs-QB-tNO"/>
+                                                    <sortDescriptor key="sortDescriptorPrototype" selector="compare:" sortKey="status"/>
                                                     <prototypeCellViews>
                                                         <tableCellView id="98g-Z2-tOo">
                                                             <rect key="frame" x="333" y="1" width="22" height="17"/>

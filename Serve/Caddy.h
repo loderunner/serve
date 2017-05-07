@@ -11,7 +11,7 @@
 @class Server;
 
 typedef enum : NSUInteger {
-    CaddyStatusStopped,
+    CaddyStatusStopped = 0,
     CaddyStatusRunning,
 } CaddyStatus;
 

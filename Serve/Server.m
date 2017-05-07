@@ -127,7 +127,6 @@ static NSArray<NSString*>* PasteboardTypes;
     return NSPasteboardReadingAsPropertyList;
 }
 
-
 - (id)initWithPasteboardPropertyList:(id)propertyList ofType:(NSString *)type
 {
     if ([type isEqualToString:ServerUTI] && [propertyList isKindOfClass:NSDictionary.class])
