@@ -103,6 +103,7 @@ static NSArray<NSURL*>* getFolderURLs(id<NSDraggingInfo> info, NSTableViewDropOp
                                  row:row
                            withEvent:nil
                               select:YES];
+    [_caddy writeCaddyfileForServer:server];
 }
 
 - (void)removeServers
@@ -241,11 +242,12 @@ static NSArray<NSURL*>* getFolderURLs(id<NSDraggingInfo> info, NSTableViewDropOp
     
     if (urls.count > 0)
     {
-        NSURL* url = [urls firstObject];
+        [urls enumerateObjectsUsingBlock:^(NSURL * _Nonnull url, NSUInteger idx, BOOL * _Nonnull stop) {
+            [self addServerWithLocation:url
+                                andPort:8000
+                                  atRow:row];
+        }];
         
-        [self addServerWithLocation:url
-                            andPort:8000
-                              atRow:row];
         return YES;
     }
     

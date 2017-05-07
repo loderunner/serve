@@ -21,7 +21,7 @@ typedef enum : NSUInteger {
 - (nonnull NSURL*)accessLogURLForServerId:(nonnull NSString*)serverId;
 - (nonnull NSURL*)errorLogURLForServerId:(nonnull NSString*)serverId;
 
-- (BOOL)writeCaddyfileForServer:(nonnull Server*)server;
+- (void)writeCaddyfileForServer:(nonnull Server*)server;
 - (nullable Server*)readCaddyfileForServerId:(nonnull NSString*)serverId;
 - (nonnull NSArray<Server*>*)readAllCaddyFiles;
 

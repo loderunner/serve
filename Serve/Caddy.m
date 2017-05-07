@@ -87,57 +87,57 @@ extern inline NSString* quotePath(NSString* path)
                                                PidfileFileName]];
 }
 
-- (BOOL)writeCaddyfileForServer:(Server *)server
+- (void)writeCaddyfileForServer:(Server *)server
 {
-    NSFileManager* fileManager = [NSFileManager defaultManager];
-    
-    NSString* directoryPath = [[self caddyfileURLForServerId:server.serverId] URLByDeletingLastPathComponent].path;
-    [fileManager createDirectoryAtPath:directoryPath
-           withIntermediateDirectories:YES
-                            attributes:nil
-                                 error:NULL];
-    DDLogDebug(@"Created directory: %@", directoryPath);
-    
-    NSMutableString* caddyfileContents = [NSMutableString string];
-    
-    {
-        // Write site address
-        NSString* siteAddressString = [NSString stringWithFormat:@"localhost:%d\n", server.port];
-        [caddyfileContents appendString:siteAddressString];
-    }
-    
-    {
-        // Write root directory directive
-        NSString* rootDirectoryString = [NSString stringWithFormat:@"root %@\n", quotePath(server.location.path)];
-        [caddyfileContents appendString:rootDirectoryString];
-    }
-    
-    {
-        // Write access log directive
-        NSString* accessLogString = [NSString stringWithFormat:@"log %@\n", quotePath([self accessLogURLForServerId:server.serverId].path)];
-        [caddyfileContents appendString:accessLogString];
-    }
-    
-    {
-        // Write error log directive
-        NSString* errorLogString = [NSString stringWithFormat:@"errors %@\n", quotePath([self errorLogURLForServerId:server.serverId].path)];
-        [caddyfileContents appendString:errorLogString];
-    }
-    
-    NSString* caddyfilePath = [self caddyfileURLForServerId:server.serverId].path;
-    BOOL res =  [fileManager createFileAtPath:caddyfilePath
-                                     contents:[caddyfileContents dataUsingEncoding:NSUTF8StringEncoding]
-                                   attributes:nil];
-    if (res)
-    {
-        DDLogDebug(@"Wrote Caddyfile: %@", caddyfilePath);
-    }
-    else
-    {
-        DDLogError(@"Couldn't write Caddyfile: %@", caddyfilePath);
-    }
-    
-    return res;
+    dispatch_async(_queue, ^() {
+        NSFileManager* fileManager = [NSFileManager defaultManager];
+        
+        NSString* directoryPath = [[self caddyfileURLForServerId:server.serverId] URLByDeletingLastPathComponent].path;
+        [fileManager createDirectoryAtPath:directoryPath
+               withIntermediateDirectories:YES
+                                attributes:nil
+                                     error:NULL];
+        DDLogDebug(@"Created directory: %@", directoryPath);
+        
+        NSMutableString* caddyfileContents = [NSMutableString string];
+        
+        {
+            // Write site address
+            NSString* siteAddressString = [NSString stringWithFormat:@"localhost:%d\n", server.port];
+            [caddyfileContents appendString:siteAddressString];
+        }
+        
+        {
+            // Write root directory directive
+            NSString* rootDirectoryString = [NSString stringWithFormat:@"root %@\n", quotePath(server.location.path)];
+            [caddyfileContents appendString:rootDirectoryString];
+        }
+        
+        {
+            // Write access log directive
+            NSString* accessLogString = [NSString stringWithFormat:@"log %@\n", quotePath([self accessLogURLForServerId:server.serverId].path)];
+            [caddyfileContents appendString:accessLogString];
+        }
+        
+        {
+            // Write error log directive
+            NSString* errorLogString = [NSString stringWithFormat:@"errors %@\n", quotePath([self errorLogURLForServerId:server.serverId].path)];
+            [caddyfileContents appendString:errorLogString];
+        }
+        
+        NSString* caddyfilePath = [self caddyfileURLForServerId:server.serverId].path;
+        BOOL res =  [fileManager createFileAtPath:caddyfilePath
+                                         contents:[caddyfileContents dataUsingEncoding:NSUTF8StringEncoding]
+                                       attributes:nil];
+        if (res)
+        {
+            DDLogDebug(@"Wrote Caddyfile: %@", caddyfilePath);
+        }
+        else
+        {
+            DDLogError(@"Couldn't write Caddyfile: %@", caddyfilePath);
+        }
+    });
 }
 
 - (Server *)readCaddyfileForServerId:(NSString *)serverId
