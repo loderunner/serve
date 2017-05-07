@@ -375,8 +375,10 @@ static NSCharacterSet* ValidCharacterSet;
             NSURL* location = [NSURL fileURLWithPath:textView.string];
             if (![location isEqual:server.location])
             {
+                NSString* newServerId = [self serverIdForLocation:location];;
+                [_caddy moveServerDirectoryFromServerId:server.serverId to:newServerId];
                 server.location = location;
-                server.serverId = [self serverIdForLocation:location];
+                server.serverId = newServerId;
                 updated = YES;
             }
         }

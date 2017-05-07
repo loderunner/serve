@@ -232,6 +232,23 @@ extern inline NSString* quotePath(NSString* path)
     }
 }
 
+- (void)moveServerDirectoryFromServerId:(NSString *)oldServerId to:(NSString *)serverId
+{
+    NSURL* oldServerDirectory = [self.applicationSupportDirectory URLByAppendingPathComponent:oldServerId];
+    NSURL* serverDirectory = [self.applicationSupportDirectory URLByAppendingPathComponent:serverId];
+    
+    NSFileManager* fileManager = [NSFileManager defaultManager];
+    
+    NSError* error = nil;
+    if (![fileManager moveItemAtURL:oldServerDirectory
+                              toURL:serverDirectory
+                              error:&error])
+    {
+        DDLogError(@"Failed to rename server directory: %@ to %@", oldServerDirectory, serverDirectory);
+        DDLogDebug(@"%@", error.localizedDescription);
+    }
+}
+
 - (void)startServer:(Server *)server
 {
     dispatch_async(_queue, ^() {
