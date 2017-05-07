@@ -773,7 +773,7 @@
                                                         </tableCellView>
                                                     </prototypeCellViews>
                                                 </tableColumn>
-                                                <tableColumn identifier="ServerListColumnStatus" width="22" minWidth="22" maxWidth="22" id="mHT-0f-Whk" userLabel="Status">
+                                                <tableColumn identifier="ServerListColumnStatus" editable="NO" width="22" minWidth="22" maxWidth="22" id="mHT-0f-Whk" userLabel="Status">
                                                     <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left">
                                                         <font key="font" metaFont="smallSystem"/>
                                                         <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>

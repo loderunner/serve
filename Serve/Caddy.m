@@ -92,7 +92,7 @@ extern inline NSString* quotePath(NSString* path)
     dispatch_async(_queue, ^() {
         NSFileManager* fileManager = [NSFileManager defaultManager];
         
-        NSString* directoryPath = [[self caddyfileURLForServerId:server.serverId] URLByDeletingLastPathComponent].path;
+        NSString* directoryPath = [self.applicationSupportDirectory URLByAppendingPathComponent:server.serverId].path;
         [fileManager createDirectoryAtPath:directoryPath
                withIntermediateDirectories:YES
                                 attributes:nil
@@ -215,6 +215,21 @@ extern inline NSString* quotePath(NSString* path)
     }
     
     return servers;
+}
+
+- (void)deleteFilesForServerId:(NSString *)serverId
+{
+    NSURL* serverDirectory = [self.applicationSupportDirectory URLByAppendingPathComponent:serverId];
+    
+    NSFileManager* fileManager = [NSFileManager defaultManager];
+    
+    NSError* error = nil;
+    if (![fileManager removeItemAtURL:serverDirectory
+                                error:&error])
+    {
+        DDLogError(@"Failed to delete server directory: %@", serverDirectory);
+        DDLogDebug(@"%@", error.localizedDescription);
+    }
 }
 
 - (void)startServer:(Server *)server

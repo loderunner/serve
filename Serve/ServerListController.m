@@ -82,9 +82,14 @@ static NSCharacterSet* ValidCharacterSet;
 
 - (void)addServerWithLocation:(NSURL *)location andPort:(in_port_t)port
 {
+    NSInteger row = (_servers.count - 1);
     [self addServerWithLocation:location
                         andPort:port
-                          atRow:(_servers.count - 1)];
+                          atRow:row];
+    [_serverListTableView editColumn:0
+                                 row:row
+                           withEvent:nil
+                              select:YES];
 }
 
 - (void)addServerWithLocation:(NSURL *)location andPort:(in_port_t)port atRow:(NSUInteger)row
@@ -97,16 +102,19 @@ static NSCharacterSet* ValidCharacterSet;
     [_servers addObject:server];
     
     [_serverListTableView reloadData];
-    [_serverListTableView editColumn:0
-                                 row:row
-                           withEvent:nil
-                              select:YES];
     [_caddy writeCaddyfileForServer:server];
 }
 
 - (void)removeServers
 {
     [self stopServers];
+    [_servers enumerateObjectsAtIndexes:_serverListTableView.selectedRowIndexes
+                                options:0
+                             usingBlock:^(Server * _Nonnull server,
+                                           NSUInteger idx,
+                                           BOOL * _Nonnull stop) {
+        [_caddy deleteFilesForServerId:server.serverId];
+    }];
     [_servers removeObjectsAtIndexes:_serverListTableView.selectedRowIndexes];
     [_serverListTableView reloadData];
 }

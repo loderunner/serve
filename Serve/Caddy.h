@@ -24,6 +24,7 @@ typedef enum : NSUInteger {
 - (void)writeCaddyfileForServer:(nonnull Server*)server;
 - (nullable Server*)readCaddyfileForServerId:(nonnull NSString*)serverId;
 - (nonnull NSArray<Server*>*)readAllCaddyFiles;
+- (void)deleteFilesForServerId:(nonnull NSString*)serverId;
 
 - (void)startServer:(nonnull Server*)server;
 - (void)stopServerWithId:(nonnull NSString*)serverId;
